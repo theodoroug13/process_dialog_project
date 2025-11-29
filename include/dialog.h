@@ -8,5 +8,5 @@
 int join_dialog(shared_data_t *data, int dialog_id, pid_t pid);
 
 //Αποστολή μηνύματος σε συγκεκριμμένο διάλογο
-int send_message(shared_data_t *data,int dialog_id, pid_t pid, char *text);
+int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text);
 #endif
