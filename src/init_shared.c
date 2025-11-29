@@ -17,7 +17,7 @@ int main(void){
 
     key=ftok(KEY_FILE,PROJECT_ID);
     if(key==-1){
-        perror("ftok");
+        perror("ftok blabla debug");
         exit(1);
     }
     printf("[init] Shared memory key: %d\n", key);
