@@ -19,8 +19,8 @@ typedef struct{
     int exists;
     int msg_id;
     int dialog_id;
-    int sender_id;
-    int readers_unseen;
+    pid_t sender_id;
+    int read_by[MAX_PROCESSES];  //0ή 1
     char text[MAX_MSG_LENGHT];
     
 }message_t;
