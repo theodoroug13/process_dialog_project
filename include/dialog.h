@@ -7,4 +7,6 @@
 //Είσοδος proccess στον διάλογο(επιστρέφει: -1=αποτυχία ή id διαλόγου )
 int join_dialog(shared_data_t *data, int dialog_id, pid_t pid);
 
+//Αποστολή μηνύματος σε συγκεκριμμένο διάλογο
+int send_message(shared_data_t *data,int dialog_id, pid_t pid, char *text);
 #endif

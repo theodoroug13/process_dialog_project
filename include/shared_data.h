@@ -5,14 +5,16 @@
 #include <semaphore.h>
 #include<sys/types.h>
 #define MAX_DIALOGS 32
-#define MAX_MSG_LENGHT 512
+#define MAX_MSG_LENGTH 512
 #define MAX_MESSAGES 256
 #define MAX_PROCESSES 16
 
 typedef struct{
     int active;
     int dialog_id;
+
     pid_t process[MAX_PROCESSES];
+    int num_processes;
 }dialog_t;
 
 typedef struct{
@@ -20,8 +22,8 @@ typedef struct{
     int msg_id;
     int dialog_id;
     pid_t sender_id;
-    int read_by[MAX_PROCESSES];  //0ή 1
-    char text[MAX_MSG_LENGHT];
+    int readers_left;
+    char text[MAX_MSG_LENGTH];
     
 }message_t;
 

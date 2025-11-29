@@ -2,6 +2,9 @@
 #include "../include/shared_data.h"
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
+
+
 int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
     if(sem_wait(&data->mutex)==-1){
         perror("sem_wait");
@@ -63,4 +66,71 @@ int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
         perror("sem_post");
     }
     return result_id;
+}
+
+int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
+    
+    if(sem_wait(&data->mutex)==-1){
+        perror("semwait failed in send");
+        exit(1);
+    }
+
+    dialog_t *dialog=NULL;
+    for(int i=0;i<MAX_DIALOGS;i++){
+        if(data->dialogs[i].active && data->dialogs[i].dialog_id==dialog_id){
+            dialog=&data->dialogs[i];
+            break;
+        }
+    }
+
+    if(dialog==NULL){
+        fprintf(stderr,"[process:%d] Dialog %d not found\n", sender, dialog_id);
+        sem_post(&data->mutex);
+        return -1;
+    }
+
+    int process_in_dialog=0;
+    for(int i=0;i<MAX_PROCESSES;i++){
+        if(dialog->process[i]==sender){
+            process_in_dialog==1;
+        }
+    }
+    if(process_in_dialog==0){
+        fprintf(stderr, "[process:%d] Not part of the dialog\n", sender);
+        sem_post(&data->mutex);
+        return -1;
+    }
+
+    int free_slot=-1;
+    for(int i=0;i<MAX_MESSAGES;i++){
+        if(data->messages[i].exists==0){
+            free_slot=i;
+        }
+    }
+    if(free_slot==-1){
+        fprintf(stderr, "[process:%d] No space for new messages in dialog %d\n", sender,dialog_id);
+        sem_post(&data->mutex);
+        return -1;
+    }
+    
+    message_t *msg = &data->messages[free_slot];
+
+    msg->exists=1;
+    msg->dialog_id=dialog_id;
+    msg->msg_id=data->next_msg_id++;
+    msg->readers_left=dialog->num_processes-1;
+    msg->sender_id=sender;
+    strncpy(msg->text,text,MAX_MSG_LENGTH-1);
+    msg->text[MAX_MSG_LENGTH-1]='\0'; 
+
+    int result_id= sender;
+    if(sem_post(&data->mutex)){
+        perror("sem_post");
+        return -1;
+    }
+
+    return result_id;
+
+
+
 }
