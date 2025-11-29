@@ -38,6 +38,24 @@ int main(void){
 
     memset(data,0, SHM_SIZE);
     
+    if( sem_init(&data->mutex,1,1)==-1){
+        perror("sem_init");
+        exit(1);
+    }
+    printf("[init] Initialized semaphore in shared data\n");
+
+    data->next_dialog_id=1;
+    data->next_msg_id=1;
+
+    printf("[init] Initialization of shared memory was successful\n");
+
+    if(shmdt(data)==-1){
+        perror("shmdt");
+        exit(1);
+    }
+    
+    return 0;
+
     
 
 
