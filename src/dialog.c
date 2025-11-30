@@ -26,15 +26,18 @@ int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
                 }
                 
                 dialog->process[0]=pid;
+                dialog->num_processes=1;
                 result_id=dialog->dialog_id;
                 break;
             }
         }
     }
     else{
+        int found=0;
         for(int i=0;i<MAX_DIALOGS;i++){
             dialog_t *dialog=&data->dialogs[i];
             if(dialog->active && dialog_id==dialog->dialog_id){
+                found=1;
                 int free_slot=-1;
                 for(int j=0;j<MAX_PROCESSES;j++){
                     //ελέγχω αν είναι ήδη μέσα το process
@@ -42,8 +45,9 @@ int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
                         result_id=dialog_id;
                         if (sem_post(&data->mutex) == -1) {
                             perror("sem_post");
-                            return result_id;
+                            return -1;
                         }
+                        return result_id;
                     }
                     else if(dialog->process[j]==0 && free_slot==-1){
                         free_slot=j;
@@ -55,11 +59,16 @@ int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
                 }
                 else{
                     dialog->process[free_slot]=pid;
+                    dialog->num_processes++;
                     result_id=dialog_id;
                 }
                 break;
             
             }
+
+        }
+        if(found==0){
+            fprintf(stderr,"[process: %d] Dialog %d wasnt found\n", pid, dialog_id);
         }
     }
     if (sem_post(&data->mutex) == -1) {
@@ -86,13 +95,14 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
     if(dialog==NULL){
         fprintf(stderr,"[process:%d] Dialog %d not found\n", sender, dialog_id);
         sem_post(&data->mutex);
-        return -1;
+        return -1;  
     }
 
     int process_in_dialog=0;
     for(int i=0;i<MAX_PROCESSES;i++){
         if(dialog->process[i]==sender){
-            process_in_dialog==1;
+            process_in_dialog=1;
+            break;
         }
     }
     if(process_in_dialog==0){
@@ -105,6 +115,7 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
     for(int i=0;i<MAX_MESSAGES;i++){
         if(data->messages[i].exists==0){
             free_slot=i;
+            break;
         }
     }
     if(free_slot==-1){
@@ -124,7 +135,7 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
     msg->text[MAX_MSG_LENGTH-1]='\0'; 
 
     int result_id= sender;
-    if(sem_post(&data->mutex)){
+    if(sem_post(&data->mutex)==-1){
         perror("sem_post");
         return -1;
     }
