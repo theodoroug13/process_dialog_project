@@ -4,7 +4,7 @@
 #include<unistd.h>
 #include "../include/dialog.h"
 
-int running=1;
+volatile int running=1;
 
 void * sender_thread(void*arg){
     client_context_t *context=(client_context_t *)arg;
@@ -66,7 +66,7 @@ void *receiver_thread(void *arg){
         }
         
         else{
-            sleep(10000) ;//για να αποφύγουμε busy waiting
+            sleep(1) ;//για να αποφύγουμε busy waiting
         }
     }
     return NULL;
