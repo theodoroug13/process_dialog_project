@@ -81,7 +81,7 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
     
     if(sem_wait(&data->mutex)==-1){
         perror("semwait failed in send");
-        exit(1);
+        return -1;
     }
 
     dialog_t *dialog=NULL;
@@ -137,7 +137,7 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
     strncpy(msg->text,text,MAX_MSG_LENGTH-1);
     msg->text[MAX_MSG_LENGTH-1]='\0'; 
 
-    int result_id= sender;
+    int result_id= 0;
     if(sem_post(&data->mutex)==-1){
         perror("sem_post");
         return -1;
@@ -154,7 +154,7 @@ int receive_message(shared_data_t *data, int dialog_id, pid_t receiver, message_
 
     if (sem_wait(&data->mutex)==-1){
         perror("semwait");
-        exit(1);
+        return -1;
     }
 
     dialog_t *dialog=NULL;
