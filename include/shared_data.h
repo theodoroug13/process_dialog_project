@@ -23,6 +23,7 @@ typedef struct{
     int dialog_id;
     pid_t sender_id;
     int readers_left;
+    int read_by[MAX_PROCESSES];
     char text[MAX_MSG_LENGTH];
     
 }message_t;

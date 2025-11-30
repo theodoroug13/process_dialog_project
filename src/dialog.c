@@ -131,6 +131,9 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
     msg->msg_id=data->next_msg_id++;
     msg->readers_left=dialog->num_processes-1;
     msg->sender_id=sender;
+    for(int i=0;i<MAX_PROCESSES;i++){
+        msg->read_by[i]=0;
+    }
     strncpy(msg->text,text,MAX_MSG_LENGTH-1);
     msg->text[MAX_MSG_LENGTH-1]='\0'; 
 
@@ -167,14 +170,14 @@ int receive_message(shared_data_t *data, int dialog_id, pid_t receiver, message_
         return -1;  
     }
 
-    int process_in_dialog=0;
+    int receiver_idx=-1;
     for(int i=0;i<MAX_PROCESSES;i++){
         if(dialog->process[i]==receiver){
-            process_in_dialog=1;
+            receiver_idx=i;
             break;
         }
     }
-    if(process_in_dialog==0){
+    if(receiver_idx==-1){
         fprintf(stderr, "[process:%d] Not part of the dialog\n", receiver);
         sem_post(&data->mutex);
         return -1;
@@ -183,7 +186,8 @@ int receive_message(shared_data_t *data, int dialog_id, pid_t receiver, message_
     int msg_idx=-1;
     for (int i=0; i<MAX_MESSAGES;i++){
         message_t *message= &data->messages[i];
-        if(message->exists && message->dialog_id==dialog_id && message->sender_id!=receiver &&message->readers_left>0){  //δεν ειμαι σίγουρος αν δεν πρεπει ο sender να διαβάζει τα μηνμυματα του
+        if(message->exists && message->dialog_id==dialog_id && message->sender_id!=receiver &&message->readers_left>0
+        && message->read_by[receiver_idx]==0){  //δεν ειμαι σίγουρος αν δεν πρεπει ο sender να διαβάζει τα μηνμυματα του
             msg_idx=i;
             break;
         }
@@ -197,6 +201,7 @@ int receive_message(shared_data_t *data, int dialog_id, pid_t receiver, message_
     message_t *message=&data->messages[msg_idx];
     *text=*message;
     message->readers_left--;
+    message->read_by[receiver_idx]=1;
     if (message->readers_left==0){
         message->exists=0;
         message->dialog_id=-1;
