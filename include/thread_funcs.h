@@ -10,10 +10,13 @@ typedef struct{
     
 }client_context_t;
 
+extern int running;
+
 //Συνάρτηση για το sender thread
 void* sender_thread();
 
 //Συναάρτηση γιΑ το receiver thread
+//
 void* receiver_thread(void* arg);
 
 
