@@ -145,3 +145,72 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
 
 
 }
+
+
+int receive_message(shared_data_t *data, int dialog_id, pid_t receiver, message_t *text){
+
+    if (sem_wait(&data->mutex)==-1){
+        perror("semwait");
+        exit(1);
+    }
+
+    dialog_t *dialog=NULL;
+    for(int i=0;i<MAX_DIALOGS;i++){
+        if (data->dialogs[i].active && data->dialogs[i].dialog_id==dialog_id ){
+            dialog=&data->dialogs[i];
+            break;
+        }
+    }
+    if(dialog==NULL){
+        fprintf(stderr,"[process:%d] Dialog %d not found\n", receiver, dialog_id);
+        sem_post(&data->mutex);
+        return -1;  
+    }
+
+    int process_in_dialog=0;
+    for(int i=0;i<MAX_PROCESSES;i++){
+        if(dialog->process[i]==receiver){
+            process_in_dialog=1;
+            break;
+        }
+    }
+    if(process_in_dialog==0){
+        fprintf(stderr, "[process:%d] Not part of the dialog\n", receiver);
+        sem_post(&data->mutex);
+        return -1;
+    }
+
+    int msg_idx=-1;
+    for (int i=0; i<MAX_MESSAGES;i++){
+        message_t *message= &data->messages[i];
+        if(message->exists && message->dialog_id==dialog_id && message->sender_id!=receiver &&message->readers_left>0){  //δεν ειμαι σίγουρος αν δεν πρεπει ο sender να διαβάζει τα μηνμυματα του
+            msg_idx=i;
+            break;
+        }
+    }
+    if(msg_idx==-1){
+        sem_post(&data->mutex);
+        fprintf(stderr, "[process: %d] No message for me\n", receiver);
+        return -1;
+    }
+
+    message_t *message=&data->messages[msg_idx];
+    *text=*message;
+    message->readers_left--;
+    if (message->readers_left==0){
+        message->exists=0;
+        message->dialog_id=-1;
+        message->msg_id=-1;
+        message->sender_id=-1;
+        message->text[0]='\0';
+    }
+    
+    if(sem_post(&data->mutex)==-1){
+        perror("sempost");
+        return -1;
+    }
+
+    return 0;
+
+
+}
