@@ -12,7 +12,7 @@ void * sender_thread(void*arg){
     
     
 
-    printf("[process %d (sender)] Type message (or TERMINATE)\n");
+    printf("[process %d (sender)] Type message (or TERMINATE)\n",context->pid);
 
     while(running){
         if (fgets(buffer,sizeof(buffer),stdin)==NULL){
