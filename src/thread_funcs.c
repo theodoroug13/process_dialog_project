@@ -12,7 +12,7 @@ void * sender_thread(void*arg){
     
     
 
-    printf("[process %d (sender)] Type message (or TERMINATE)\n",context->pid);
+    printf("[process %d (sender)] Type message (or TERMINATE)\n [YOU (%d)]",context->pid, context->pid);
 
     while(running){
         if (fgets(buffer,sizeof(buffer),stdin)==NULL){
@@ -42,7 +42,9 @@ void * sender_thread(void*arg){
             running=0;
             break;
         }
-
+        
+        printf("[YOU (%d)] >",context->pid);
+        fflush(stdout);
     }
     return NULL;
 }
@@ -55,14 +57,15 @@ void *receiver_thread(void *arg){
     while (running){
         int result=receive_message(context->data, context->dialog_id,context->pid, &message);
         if(result==0){
-            printf("\n[Dialog %d][from p:%d] %s", message.dialog_id, message.sender_id,message.text);
-            printf("[process: %d] >",context->pid);
+            printf("\n[Dialog %d][from p:%d] %s\n", message.dialog_id, message.sender_id,message.text);
+            printf("[YOU (%d)] >",context->pid);
             fflush(stdout);
             if(strcmp("TERMINATE",message.text)==0){
                 printf("[process %d (receiver)] TERMINATING exit receiver\n", context->pid);
                 running=0;
                 break;
             }
+
         }
         
         else{

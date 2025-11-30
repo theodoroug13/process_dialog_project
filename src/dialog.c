@@ -194,7 +194,7 @@ int receive_message(shared_data_t *data, int dialog_id, pid_t receiver, message_
     }
     if(msg_idx==-1){
         sem_post(&data->mutex);
-        fprintf(stderr, "[process: %d] No message for me\n", receiver);
+        
         return -1;
     }
 
