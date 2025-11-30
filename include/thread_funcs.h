@@ -5,15 +5,15 @@
 
 typedef struct{
     shared_data_t *data;
-    int dialog_id=-1;
+    int dialog_id;
     pid_t pid;
     
 }client_context_t;
 
-extern int running;
+extern volatile int running;
 
 //Συνάρτηση για το sender thread
-void* sender_thread();
+void* sender_thread(void *arg);
 
 //Συναάρτηση γιΑ το receiver thread
 //
