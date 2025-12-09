@@ -63,6 +63,7 @@ void *receiver_thread(void *arg){
             if(strcmp("TERMINATE",message.text)==0){
                 printf("[process %d (receiver)] TERMINATING exit receiver\n", context->pid);
                 running=0;
+                pthread_cancel(context->sender_thread);
                 break;
             }
 

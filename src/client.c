@@ -77,6 +77,7 @@ int main(int argc, char** argv){
         exit(1);
     }
 
+    context.sender_thread=thread_sender_id;
     if(pthread_create(&thread_receiver_id,NULL,receiver_thread,&context)!=0){
         perror("pthread receiver create failed");
         running=0;
