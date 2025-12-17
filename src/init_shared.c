@@ -22,12 +22,21 @@ int main(void){
     }
     printf("[init] Shared memory key: %d\n", key);
 
+    //για να μην κάνω συνέχεια ipcrm αν θέλω να ξανατρέξω το init, αν υπάρχει ήδη το shared memory το διαγράφω και φτιάχνω καινούργιο
+    shmid=shmget(key,SHM_SIZE, 0666);
+    if(shmid!=-1){
+        
+        if(shmctl(shmid, IPC_RMID, NULL)==-1){
+            perror("shmctl");
+            exit(1);
+        }
+    }
     shmid=shmget(key,SHM_SIZE, IPC_CREAT | IPC_EXCL | 0666);
-    if(shmid==-1){
+    if (shmid==-1){
         perror("shmget");
         exit(1);
     }
-    printf("[init] Created shared memory with id: %d\n", shmid);
+
 
     data=(shared_data_t * )shmat(shmid,NULL,0);
     if(data==(void *)-1){
