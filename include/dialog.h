@@ -5,7 +5,7 @@
 #include "shared_data.h"
 
 //Είσοδος proccess στον διάλογο(επιστρέφει: -1=αποτυχία ή id διαλόγου )
-int join_dialog(shared_data_t *data, int dialog_id, pid_t pid);
+int join_dialog(shared_data_t *data, int dialog_id, pid_t pid, int *slot_idx);
 
 //Αποστολή μηνύματος σε συγκεκριμμένο διάλογο
 //επιστρέφει -1 για FAIL ή 1 για SUCCESS

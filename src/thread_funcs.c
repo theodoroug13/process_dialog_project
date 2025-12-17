@@ -40,6 +40,27 @@ void * sender_thread(void*arg){
         if(strcmp("TERMINATE", buffer)==0){
             printf("[process %d (sender)] TERMINATING exit sender\n", context->pid);
             running=0;
+            sem_wait(&context->data->mutex);
+            dialog_t * dialog=NULL;
+            int slot=-1;
+            for (int i=0;i<MAX_DIALOGS;i++){
+                if(context->data->dialogs[i].active && context->data->dialogs[i].dialog_id ==context->dialog_id){
+                    dialog= &context->data->dialogs[i];
+                     break;
+                 }
+            }
+            if(dialog!=NULL){
+               for(int i=0;i<MAX_PROCESSES;i++){
+                   if (dialog->process[i]==context->pid){
+                        slot=i;
+                        break;
+                    }   
+                }
+            }     
+            sem_post(&context->data->mutex);
+            if(dialog!=NULL && slot!=-1){
+                sem_post(&dialog->dialog_mutex[slot]);
+            }
             break;
         }
         
@@ -52,9 +73,38 @@ void * sender_thread(void*arg){
 void *receiver_thread(void *arg){
     client_context_t *context=(client_context_t*)arg;
     message_t message;
+    int slot=-1;
+    dialog_t *dialog=NULL;
+    
+    sem_wait(&context->data->mutex);
+    for (int i=0;i<MAX_DIALOGS;i++){
+        if(context->data->dialogs[i].active && context->data->dialogs[i].dialog_id ==context->dialog_id){
+            dialog= &context->data->dialogs[i];
+            break;
+        }
+    }
+    if(dialog!=NULL){
+        for(int i=0;i<MAX_PROCESSES;i++){
+            if (dialog->process[i]==context->pid){
+                slot=i;
+                break;
+            }
+        }
+    }
 
+
+
+    sem_post(&context->data->mutex);
+    if(dialog==NULL  || slot == -1){
+        fprintf(stderr, "[process %d (receiver)] Dialog not found\n", context->pid);
+        return NULL;
+    }
 
     while (running){
+        sem_wait(&dialog->dialog_mutex[slot]);
+        if(!running){
+            break;
+        }
         int result=receive_message(context->data, context->dialog_id,context->pid, &message);
         if(result==0){
             printf("\n[Dialog %d][from p:%d] %s\n", message.dialog_id, message.sender_id,message.text);
@@ -69,9 +119,6 @@ void *receiver_thread(void *arg){
 
         }
         
-        else{
-            sleep(1) ;//για να αποφύγουμε busy waiting
-        }
     }
     return NULL;
 }

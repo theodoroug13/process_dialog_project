@@ -15,6 +15,7 @@ typedef struct{
 
     pid_t process[MAX_PROCESSES];
     int num_processes;
+    sem_t dialog_mutex[MAX_PROCESSES];
 }dialog_t;
 
 typedef struct{

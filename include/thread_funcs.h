@@ -7,7 +7,9 @@
 typedef struct{
     shared_data_t *data;
     int dialog_id;
+    int slot_idx;
     pid_t pid;
+    
     pthread_t sender_thread ;//για να μπορώ να τον κάνω cancel από το reciever για επδ μπλοκαριζόταν μετά από το TERMINATE
     
 }client_context_t;

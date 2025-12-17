@@ -5,7 +5,7 @@
 #include<string.h>
 
 
-int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
+int join_dialog(shared_data_t *data, int dialog_id, pid_t pid, int *slot_idx){
     if(sem_wait(&data->mutex)==-1){
         perror("sem_wait");
         exit(1);
@@ -22,7 +22,12 @@ int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
                 
                 for (int j=0;j <MAX_PROCESSES; j++)
                 {
+        
                     dialog->process[j] = 0;
+                    if(sem_init(&dialog->dialog_mutex[j],1,0)==-1){
+                        perror("sem_init");
+                        exit(1);
+                    }
                 }
                 
                 dialog->process[0]=pid;
@@ -61,6 +66,9 @@ int join_dialog(shared_data_t *data, int dialog_id, pid_t pid){
                     dialog->process[free_slot]=pid;
                     dialog->num_processes++;
                     result_id=dialog_id;
+                    if(slot_idx!=NULL){
+                        *slot_idx=free_slot;
+                    }
                 }
                 break;
             
@@ -138,6 +146,11 @@ int send_message(shared_data_t *data,int dialog_id, pid_t sender, char *text){
     msg->text[MAX_MSG_LENGTH-1]='\0'; 
 
     int result_id= 0;
+    for(int i=0;i<MAX_PROCESSES;i++){
+        if(dialog->process[i]!=0 && dialog->process[i]!= sender){
+            sem_post(&dialog->dialog_mutex[i]); 
+        }
+    }
     if(sem_post(&data->mutex)==-1){
         perror("sem_post");
         return -1;

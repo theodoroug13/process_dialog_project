@@ -54,7 +54,8 @@ int main(int argc, char** argv){
     }
 
     pid_t pid=getpid();
-    int joined_id=join_dialog(data,dialog_id,pid);
+    int slot;
+    int joined_id=join_dialog(data,dialog_id,pid,&slot);
     if (joined_id==-1){
         fprintf(stderr, "[process %d] Failed to join dialog %d\n",pid, dialog_id);
         shmdt(data);
@@ -68,6 +69,7 @@ int main(int argc, char** argv){
     context.data=data;
     context.dialog_id=joined_id;
     context.pid=pid;
+    context.slot_idx=slot;
     running=1;
 
     pthread_t thread_sender_id, thread_receiver_id;
