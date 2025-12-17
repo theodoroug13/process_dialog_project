@@ -187,7 +187,7 @@ int receive_message(shared_data_t *data, int dialog_id, pid_t receiver, message_
     for (int i=0; i<MAX_MESSAGES;i++){
         message_t *message= &data->messages[i];
         if(message->exists && message->dialog_id==dialog_id && message->sender_id!=receiver &&message->readers_left>0
-        && message->read_by[receiver_idx]==0){  //δεν ειμαι σίγουρος αν δεν πρεπει ο sender να διαβάζει τα μηνμυματα του
+        && message->read_by[receiver_idx]==0){  
             msg_idx=i;
             break;
         }
